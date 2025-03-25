@@ -1,0 +1,149 @@
+Ngoc Anh
+
+MUỐN CHẠY THÌ add folder vào workspace của vscode 
+Sau đó mở terminal bằng lệnh ctrl + `
+gõ lệnh cd RTC
+gõ tiếp lệnh daphne -p 8000 -b 0.0.0.0 RTC.asgi:application
+
+sau đó thì truy cập vào http://127.0.0.1:8000/ là vào được
+
+
+1. Tạo folder NgocAnh
+2. Add folder to workspace of VSCODE
+3. Mở terminal bằng ctrl + ` 
+4. Gõ lệnh "django-admin startproject RTC" 
+các filepy tự tạo
+file urls.py chứa đường dẫn tới các hàm
+forms biểu mẫu đăng nhập (bảng userchat để lưu dữ liệu và trường để nhập dữ liệu)
+consumers
+rounting
+5. Gõ lệnh "cd RTC"
+6. Gõ lệnh "python manage.py startapp Chat"
+7. Tạo folder "templates" tại E:\NgocAnh\RTC\Chat\templates
+8. Tạo file "urls.py" tại E:\NgocAnh\RTC\Chat\urls.py
+9. Vào file "settings.py" tại E:\NgocAnh\RTC\RTC\settings.py ở mục INSTALLED_APPS thêm 'Chat' và 'channels' vào danh sách
+10. Thêm mã sau vào cuối file "settings.py" 
+	LOGIN_REDIRECT_URL = '/login_chat/'
+	LOGIN_URL = '/login_chat/'
+
+	LOGOUT_REDIRECT_URL = '/login_chat/' 
+
+	AUTH_USER_MODEL = 'Chat.UserChat'
+
+11. Tạo folder "chat" tại E:\NgocAnh\RTC\Chat\templates
+12. Tạo file "base.html", "login.html", "signup.html", "home.html" trong folder templates "E:\NgocAnh\RTC\Chat\templates\chat"
+13. Thêm mã sau vào urls.py tại E:\NgocAnh\RTC\Chat\urls.py:
+	from django.urls import path
+	from . import views
+	from django.contrib.auth import views as auth_views
+
+	urlpatterns = [
+    	path('', views.login_chat, name="login_chat"),
+    	path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+
+	]	
+14. Khởi tạo model User tùy chỉnh thay thế model có sẵn của Django
+15. Tạo các models cần thiết cho web chat
+16. chạy lệnh 
+	python manage.py makemigrations
+	python manage.py migrate
+17. Tạo file "forms.py" tại "E:\NgocAnh\RTC\Chat\forms.py" 
+18. Thêm mã sau vào file forms.py :
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from django import forms
+from .models import UserChat
+class SignUpForm(UserCreationForm):
+    class Meta:
+        model = UserChat
+        fields = ['username','password1','password2']
+
+19. Viết các hàm login và signup
+20. Thêm mã sau vào cuối urls.py của project "E:\NgocAnh\RTC\RTC\urls.py"
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+21. Thêm đường dẫn sau vào urlpatterns 
+path('', include('Chat.urls')),
+22. viết các hàm signup, login_chat, home, trong views.py "E:\NgocAnh\RTC\Chat\views.py"
+23. thêm các đường dẫn hàm vào urls tại "E:\NgocAnh\RTC\Chat\urls.py"
+24. Chạy lệnh python manage.py runserver để truy cập vào trang web
+25. Vào trang tạo tài khoản, tạo 1 tài khoản, đăng nhập
+26. Tạo folder media tại E:\NgocAnh\RTC
+27. Tạo folder profile_pictures tại E:\NgocAnh\RTC\media
+28. Thêm đường dẫn media vào file settings 
+"MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') "
+
+29. Tạo file consumers.py tại E:\NgocAnh\RTC\Chat\consumers.py
+30. Tạo file rounting.py tại E:\NgocAnh\RTC\Chat\rounting.py
+31. Chạy lệnh daphne RTC.asgi:application hoặc
+daphne -p 8000 -b 0.0.0.0 RTC.asgi:application
+
+32. Thêm mã sau vào file settings
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+ngrok http 8000
+
+daphne -p 8000 -b 0.0.0.0 RTC.asgi:application
+python manage.py runserver10.188.99.92
+
+
+khi người dùng bấm vào nút chia sẽ màn call
+- đầu tiên sẽ kích hoạt 2 hàm là startcall(bắt đầu cuộc gọi) và showModal(hiển thị hình ảnh)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,45 @@
+{% extends "chat/base.html" %}
+
+{% block title %}Signup | {% endblock %}
+
+{% block content %}
+<div class="container d-flex align-items-center justify-content-center min-vh-10">
+    <div class="card shadow" style="width: 500px;">
+        <div class="card-header text-center">
+            <h3>Đăng ký tài khoản</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" action=".">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="username" class="form-label">Tên tài khoản</label>
+                    <input type="text" class="form-control" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Mật khẩu</label>
+                    <input type="password" class="form-control" name="password1" required>
+                </div>
+                <div class="mb-3">
+                    <label for="confirm_password" class="form-label">Xác nhận mật khẩu</label>
+                    <input type="password" class="form-control" name="password2" required>
+                </div>
+                {% if form.errors %}
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <div class="alert alert-danger mt-2" role="alert">
+                                <p>{{ error | escape }}</p>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Đăng ký</button>
+                </div>
+            </form>
+        </div>
+        <div class="card-footer text-center">
+            <p>Đã có tài khoản? <a href="/">Đăng nhập tại đây</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

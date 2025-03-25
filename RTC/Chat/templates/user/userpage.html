@@ -1,0 +1,116 @@
+{% extends 'chat/base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-start">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="d-flex justify-content-center align-items-center mb-3">
+                            <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                        </div>
+                        <h2 class="card-title">{{ user.username }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-body">
+                        <h1 class="card-title mb-4">Thông tin tài khoản</h1>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-3"><strong>Email:</strong> {{ user.email }}</p>
+                                <p class="mb-3"><strong>Ngày sinh:</strong> {{ user.date_of_birth }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-3"><strong>Tên đầy đủ:</strong> {{ user.full_name }}</p>
+                                <p class="mb-3"><strong>Số điện thoại:</strong> {{ user.phone_number }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-3"><strong>Ngày bắt đầu:</strong> {{ user.day_start }}</p>
+                                <p class="mb-3"><strong>Ngày kết thúc:</strong> {{ user.day_end }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-3"><strong>Số lần cảnh cáo:</strong> {{ user.warning_count }}</p>
+                                <p class="mb-3"><strong>Số lần chặn:</strong> {{ user.block_count }}</p>
+                            </div> 
+                            <div class="col-md-6">
+                                <div class="mb-3 btn btn-danger" onclick="displayChangeInfoModal()">Thay đổi thông tin</div>
+                                <div class="mb-3 btn btn-danger" onclick="displayChangePasswordModal()">Đổi mật khẩu</div>
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="changePasswordModal" style="display: none;">
+        <div class="d-flex justify-content-between">
+            <h5 class="modal-title" id="changePasswordModalLabel">Thay đổi mật khẩu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="closeChangePasswordModal()"></button>
+        </div>
+        <form id="changePasswordForm">
+            <div class="mb-3">
+                <label for="currentPassword" class="form-label">Mật khẩu hiện tại</label>
+                <input type="password" class="form-control" id="currentPassword" required>
+            </div>
+            <div class="mb-3">
+                <label for="newPassword" class="form-label">Mật khẩu mới</label>
+                <input type="password" class="form-control" id="newPassword" required>
+            </div>
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới</label>
+                <input type="password" class="form-control" id="confirmPassword" required>
+            </div>
+        </form>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="submitChangePassword()">Xác nhận</button>
+        </div>
+    </div>
+
+    <div id="changeInfoModal" style="display: none;">
+        <div class="d-flex justify-content-between">
+            <h5 class="modal-title" id="changeInfoModalLabel">Thay đổi thông tin</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="closeChangeInfoModal()"></button>
+        </div>
+        <form id="changeInfoForm">
+            <div class="mb-3">
+                <label for="currentInfo" class="form-label">Tên đầy đủ</label>
+                <input type="text" class="form-control" id="currentInfo" value="{{ user.full_name }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="newInfo" class="form-label">Số điện thoại</label>
+                <input type="text" class="form-control" id="newInfo" value="{{ user.phone_number }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="confirmInfo" class="form-label">Ngày sinh</label>
+                <input type="date" class="form-control" id="confirmInfo" value="{{ user.date_of_birth }}" required>
+            </div>
+        </form>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" onclick="closeChangeInfoModal()">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="submitChangeInfo()">Xác nhận</button>
+        </div>
+    </div>
+    <script>
+        const changePasswordModal = document.getElementById('changePasswordModal');
+        const changeInfoModal = document.getElementById('changeInfoModal');
+        function displayChangePasswordModal() {
+            changeInfoModal.style.display = 'none';
+            changePasswordModal.style.display = 'block';
+        }
+        function closeChangePasswordModal() {
+            changePasswordModal.style.display = 'none';
+            changeInfoModal.style.display = 'none';
+        }
+        function displayChangeInfoModal() {
+            changePasswordModal.style.display = 'none';
+            changeInfoModal.style.display = 'block';
+        }
+        function closeChangeInfoModal() {   
+            changeInfoModal.style.display = 'none';
+            changePasswordModal.style.display = 'none';
+        }
+    </script>
+{% endblock %}

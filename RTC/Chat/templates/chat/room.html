@@ -1,0 +1,556 @@
+{% extends "chat/base.html" %}
+
+{% block title %}Chat room | {% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="left-column rounded shadow-sm">
+        {% if rooms %}
+            {% for room in rooms %}
+                <div class="group-list">
+                    {% for user in room.users.all %}
+                        {% if user.username != request.user.username and user.username != receiver.username %}
+                            <div class="d-flex" style="width: 100%; height: 70px; align-items: center; padding: 5px;">
+                                <img src="{{ user.profile_picture.url | default:'media/profile_pictures/default.jpg' }}" 
+                                        alt="Profile Picture" 
+                                        class="img-fluid rounded-circle" 
+                                        style="width: 40px; height: 40px; object-fit: cover; margin-right: 15px;">
+                                <a href="{% url 'create_room' user.username %}" style="
+                                    background-color: rgb(0, 48, 131);
+                                    text-decoration: none;
+                                    padding: 10px;
+                                    color: white;
+                                    text-align: center;
+                                    border-radius: 5px; 
+                                    font-weight: bold;
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                    height: 100%;
+                                    width: calc(100% - 55px); /* Tính toán width cho link (dựa trên kích thước của ảnh và padding) */
+                                ">
+                                    {{ user.username }}
+                                </a>
+                            </div>
+                        {% elif user.username == receiver.username %}
+                            <div class="d-flex" style="width: 100%; height: 70px; align-items: center; padding: 5px;">
+                                <img src="{{ user.profile_picture.url | default:'media/profile_pictures/default.jpg' }}" 
+                                        alt="Profile Picture" 
+                                        class="img-fluid rounded-circle" 
+                                        style="width: 40px; height: 40px; object-fit: cover; margin-right: 15px;">
+                                <a href="{% url 'create_room' user.username %}" style="
+                                    background-color: rgb(0, 24, 80);
+                                    text-decoration: none;
+                                    padding: 10px;
+                                    color: white;
+                                    text-align: center;
+                                    border-radius: 5px; 
+                                    font-weight: bold;
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                    height: 100%;
+                                    width: calc(100% - 55px); /* Tính toán width cho link (dựa trên kích thước của ảnh và padding) */
+                                ">
+                                    {{ user.username }}
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="">Bạn chưa có bất kỳ cuộc trò chuyện nào!</div>
+        {% endif %}
+    </div> 
+    <div class="main-content container mt-0" style="max-width: 100%; display: flex; flex-direction: column;">
+        <div id="chatBox" class="border p-3 mb-2 rounded shadow-sm"
+            style="flex-grow: 1; overflow-y: auto; max-width: 100%;background-color: lightblue;">  
+            {% for message in messages %}
+                <div class="d-flex {% if message.sender == sender %}justify-content-end{% else %}justify-content-start{% endif %} mb-2">
+                {% if message.sender == sender %}
+                    <!-- Tin nhắn của bạn (Hiển thị bên phải) -->
+                    <div class="text-end">
+                    <p class="mb-1"><strong>{{ message.sender.username }}:</strong></p>
+                    {% if message.image %}
+                        <img src="{{ message.image }}" alt="Profile Picture"
+                            style="width: auto; max-width: 400px; height: auto; max-height:700px; margin-right: 10px;">
+                    {% endif %}
+                    {% if message.file %}
+                        <a href="{{ message.file }}" download class="d-block text-decoration-none text-primary mb-2">
+                        📂 Tải tệp đính kèm
+                        </a>
+                    {% endif %}
+                    {% if message.content %}
+                        <p class="p-2 bg-primary text-white rounded" style="word-wrap: break-word;">
+                        {{ message.content }}
+                        </p>
+                    {% endif %}
+                    </div>
+                {% else %}
+                    <!-- Tin nhắn của bạn bè (Hiển thị bên trái) -->
+                    <div class="d-flex align-items-start">
+                    <img src="{{ receiver.profile_picture.url }}" alt="Profile Picture"
+                        class="img-fluid rounded-circle" style="width: 30px; height: 30px; margin-right: 10px;">
+                    <div>
+                        <p class="mb-1"><strong>{{ message.sender.username }}:</strong></p>
+                        {% if message.image %}
+                        <img src="{{ message.image }}" alt="Profile Picture"
+                            style="width: auto; max-width: 400px; height: auto; max-height:700px; margin-right: 10px;">
+                        {% endif %}
+                        {% if message.file %}
+                        <a href="{{ message.file }}" download class="d-block text-decoration-none text-primary mb-2">
+                            📂 Tải tệp đính kèm
+                        </a>
+                        {% endif %}
+                        {% if message.content %}
+                        <p class="p-2 bg-primary text-white rounded" style="word-wrap: break-word;">
+                            {{ message.content }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    </div>
+                {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="input-group">
+                <div class="d-flex align-items-center gap-3">
+                    <label class="btn btn-icon" for="chat-image-input">
+                        <i class="fas fa-image fa-lg" style="color:rgb(255, 255, 255); cursor: pointer;"></i>
+                    </label>
+                    <input id="chat-image-input" type="file" accept="image/*" style="display: none;">
+                                        
+                    <label class="btn btn-icon" for="chat-file-input">
+                        <i class="fas fa-paperclip fa-lg" style="color:rgb(255, 255, 255); cursor: pointer;"></i>
+                    </label>
+                    <input id="chat-file-input" type="file" style="display: none;">
+                </div>
+                <input type="text" id="chat-message-input" class="form-control" placeholder="Nhập tin nhắn...">
+                <input id="sender_username" type="hidden" value="{{ request.session.username }}">
+                <div class="input-group-append">
+                    <button class="btn btn-icon" id="chat-message-submit" title="Gửi tin nhắn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                    <button class="btn btn-icon" id="call-button" onclick="startCall(), acceptOfferShare()" title="Gọi video">
+                        <i class="fas fa-video"></i>
+                    </button>
+                    <button class="btn btn-icon" id="share-button" onclick="startShareScreen(), acceptOfferShare()" title="Chia sẻ màn hình">
+                        <i class="fas fa-desktop"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    <div class="right-column container mt-0 pt-1" style="max-width: 300px; flex-direction: column;">
+        <div class="chat-container">
+            <div class="chat-header">
+                {% for message in messages %}
+                    {% if message.image %}
+                        <img src="{{ message.image }}" alt="Profile Picture"
+                            style="width: auto; max-width: 100px; height: auto; max-height:auto; margin-right: 10px;">
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div id="customModal" class="position-fixed start-50 translate-middle d-none"
+        style="top: 350px; width: 1400px; height: 580px; background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.3); border-radius: 10px;">
+        
+        <div id="offer-container" style="width:100%; height:450px; display:none; justify-content: center; align-items: center;">
+            <div style="width: 40%; height: auto; padding: 5px; margin: auto; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <img src="{{ receiver.profile_picture.url | default:'media/profile_pictures/default.jpg' }}" 
+                     alt="Profile Picture" 
+                     class="img-fluid rounded-circle" 
+                     style="width: 300px; height: 300px; object-fit: cover;">
+                
+                <div style="background-color: pink; padding: 10px; color: black; text-align: center; border-radius: 5px; font-weight: bold; font-size:30px; width:100%;">
+                    {{ receiver.username }}
+                </div>
+                
+                <button class="btn btn-danger" style="width: 100%;" onclick="acceptOfferShare()">Chấp nhận</button>
+                <button class="btn btn-danger" style="width: 100%;" onclick="hideModal(), endCall()">Từ chối</button>
+            </div>
+        </div>
+
+        <div id="video-container" style="display:none;">
+            <div id="video-call-container">
+                <video id="localVideo" autoplay mute poster controls allowfullscreen allow="autoplay; picture-in-picture" style="width: 49%; height:500px; border: 2px solid blue;"></video>
+                <video id="remoteVideo" autoplay poster controls allowfullscreen allow="autoplay; picture-in-picture" style="width: 49%; height:500px; border: 2px solid red;"></video>
+            </div>
+            <div class="d-flex justify-content-center gap-2">
+                <button class="btn btn-danger rounded-circle" style="width: 50px; height: 50px;" id="end-call-button" onclick="hideModal(), endCall()">
+                    <i class="fas fa-phone-slash"></i>
+                </button>
+                <button class="btn btn-primary rounded-circle" style="width: 50px; height: 50px;" id="call-button" onclick="startCall(), acceptOfferShare()">
+                    <i class="fas fa-phone"></i>
+                </button>
+                <button class="btn btn-primary rounded-circle" style="width: 50px; height: 50px;" id="share-button" onclick="startShareScreen(), acceptOfferShare()">
+                    <i class="fas fa-desktop"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// Cuộn xuống tin nhắn mới nhất
+window.onload = function() {
+    let chatBox = document.getElementById("chatBox");
+    chatBox.scrollTop = chatBox.scrollHeight;
+};
+// Thiết lập nút enter là nút gửi tin nhắn và gửi file
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault(); // Ngăn chặn hành vi mặc định
+        document.getElementById("chat-message-submit").click(); // Kích hoạt nút gửi
+    }
+});
+
+
+// Tạo kết nối WebRTC
+const peer = new RTCPeerConnection({
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+});
+// Thiết lập biến
+let localStream;
+const localVideo = document.getElementById("localVideo");
+const remoteVideo = document.getElementById("remoteVideo");
+let iceCandidateQueue = []; // Hàng đợi ICE candidate lưu trữ một danh sách ICE candidate (thông tin kết nối như địa chỉ Ip, cổng)
+
+// Khi có luồng video từ user khác
+peer.ontrack = (event) => {
+    remoteVideo.srcObject = event.streams[0];
+};
+
+// Khi có ICE Candidate mới
+peer.onicecandidate = (event) => {
+    if (event.candidate) {
+    chatSocket.send(JSON.stringify({
+        type: "ice_candidate",
+        candidate: event.candidate,
+        sender: senderUsername
+    }));
+    }
+};
+// Các hàm hiển thị và ẩn khung hình gọi, nhận call
+function showOfferShare() {
+    showModal()
+    document.getElementById("offer-container").style.display = "block";
+}
+
+function acceptOfferShare() {
+    showModal()
+    document.getElementById("offer-container").style.display = "none";
+    document.getElementById("video-container").style.display = "block";
+}
+
+function refuseOffderShare() {
+    hideModal()
+    endCall()
+    endcallButton.click()
+}
+
+function showModal() {
+    document.getElementById("customModal").classList.remove("d-none");
+}
+
+function hideModal() {
+    document.getElementById("customModal").classList.add("d-none");
+}
+
+// Áp dụng các ICE candidate trong hàng đợi sau khi SDP sẵn sàng
+async function applyQueuedIceCandidates() {
+    while (iceCandidateQueue.length > 0) {
+    const candidate = iceCandidateQueue.shift();
+    await peer.addIceCandidate(candidate)
+        .catch(error => console.error("Lỗi thêm queued ICE candidate:", error));
+    }
+}
+
+// Lấy các biến từ template
+const roomName = "{{ room_name }}";
+const senderUsername = document.getElementById("sender_username").value;
+const sender = {
+    id: "{{ sender.id }}",
+    username: "{{ sender.username }}",
+};
+const receiver = {
+    id: "{{ receiver.id }}",
+    username: "{{ receiver.username }}",
+}
+// Khởi tạo WebSocket
+const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+const chatSocket = new WebSocket(`${wsProtocol}${window.location.host}/ws/chat/${roomName}/`);
+
+
+const chatLog = document.getElementById('chatBox');
+const messageInput = document.getElementById('chat-message-input');
+const imageInput = document.getElementById('chat-image-input');
+const fileInput = document.getElementById('chat-file-input');
+const messageSubmit = document.getElementById('chat-message-submit');
+const endcallButton = document.getElementById('end-call-button');
+
+// Lắng nghe tin nhắn từ server
+chatSocket.onmessage = function(event) {
+    //tạo biến data để lấy dữ liệu nhận được từ server
+    const data = JSON.parse(event.data);
+    // kiểm tra kiểu dữ liệu nhận được có phải là call_offer không
+    if (data.type === "call_offer") {
+        console.log("đây là share offer của: " + senderUsername)
+        video_container = document.getElementById("video-container")
+        if(video_container.style.display == "none"){
+            // Gọi hàm hiển thị bảng chấp nhập cuộc gọi 
+            showOfferShare()
+        }
+        //signalingState cho biết trạng thái của quá trình đàm phán (negotiation) giữa hai peer.
+        // "stable" có nghĩa là không có quá trình đàm phán nào đang diễn ra và kết nối đang ở trạng thái ổn định
+        if (peer.signalingState === "stable") {
+            console.log("Nhận offer từ peer, signalingState:", peer.signalingState);
+            peer.setRemoteDescription(new RTCSessionDescription(data.offer))
+            .then(() => peer.createAnswer())
+            .then(answer => peer.setLocalDescription(answer).then(() => answer))
+            .then(answer => {
+                chatSocket.send(JSON.stringify({
+                type: "call_answer",
+                answer: answer,
+                sender: senderUsername
+                }));
+                applyQueuedIceCandidates(); // Áp dụng ICE candidate sau khi answer được thiết lập
+            })
+            .catch(error => console.error("Lỗi xử lý call_offer:", error));
+        } else {
+            console.warn("Không xử lý offer vì signalingState:", peer.signalingState);
+        }
+    }
+    // kiểm tra kiểu dữ liệu nhận được có phải là share_offer không
+
+    if (data.type === "share_offer") {
+        console.log("đây là share offer của: " + senderUsername)
+        video_container = document.getElementById("video-container")
+        if(video_container.style.display == "none"){
+            showOfferShare()
+        }
+        if (peer.signalingState === "stable") {
+            console.log("Nhận offer từ peer, signalingState:", peer.signalingState);
+            peer.setRemoteDescription(new RTCSessionDescription(data.offer))
+            .then(() => peer.createAnswer())
+            .then(answer => peer.setLocalDescription(answer).then(() => answer))
+            .then(answer => {
+                chatSocket.send(JSON.stringify({
+                type: "call_answer",
+                answer: answer,
+                sender: senderUsername
+                }));
+                applyQueuedIceCandidates(); // Áp dụng ICE candidate sau khi answer được thiết lập
+            })
+            .catch(error => console.error("Lỗi xử lý call_offer:", error));
+        } else {
+            console.warn("Không xử lý offer vì signalingState:", peer.signalingState);
+        }
+    }
+    // kiểm tra kiểu dữ liệu nhận được có phải là call_answer không
+
+    if (data.type === "call_answer") {
+        if (peer.signalingState === "have-local-offer") {
+            console.log("Nhận answer từ peer, signalingState:", peer.signalingState);
+            peer.setRemoteDescription(new RTCSessionDescription(data.answer))
+            .then(() => applyQueuedIceCandidates())
+            .catch(error => console.error("Lỗi setRemoteDescription với answer:", error));
+        } else {
+            console.warn("Không xử lý answer vì signalingState:", peer.signalingState);
+        }
+    }
+    // kiểm tra kiểu dữ liệu nhận được có phải là ice_candidate không
+
+    if (data.type === "ice_candidate") {
+        const candidate = new RTCIceCandidate(data.candidate);
+        if (peer.remoteDescription && peer.remoteDescription.type) {
+            peer.addIceCandidate(candidate)
+            .catch(error => console.error("Lỗi thêm ICE candidate:", error));
+        } else {
+            iceCandidateQueue.push(candidate); // Lưu vào hàng đợi nếu SDP chưa sẵn sàng
+        }
+    }
+    // kiểm tra kiểu dữ liệu nhận được có phải là error không nếu có thì báo ra console
+
+    if (data.type === "error") {
+        console.error("Lỗi từ server:", data.message);
+    }
+    // kiểm tra kiểu dữ liệu nhận được có phải là end_connection không nếu có thực hiện kết thúc cuộc gọi
+
+    if (data.type === "end_connection") {
+        // kiểm tra username của người nhận và thực hiện kết thúc cuộc gọi
+        if(receiver.username == data.receiver){
+            hideModal();
+            endCall();
+        }
+    }
+    // kiểm tra kiểu dữ liệu nhận được có phải là chat_message không 
+    if (data.type === "chat_message") {
+        // nếu tin nhắn là rỗng và ko có ảnh hay file kèm theo thì ngắt
+        if(data.message == "" && !data.image && !data.file){
+            return 
+        }
+        // Nếu có tin nhắn, file, ảnh thì hiển thị ra 
+        else{
+            const newMessage = `
+                <div class="d-flex ${data.sender === sender.username ? 'justify-content-end' : 'justify-content-start'} mb-2">
+                ${data.sender === sender.username
+                    ? `<div class="text-end">
+                        <p class="mb-1"><strong>${data.sender}:</strong></p>
+                        ${data.image ? `<img src="${data.image}" class="img-fluid rounded mb-2" style="max-width: 400px; max-height:700px;">` : ''}
+                        ${data.file ? `<a href="${data.file}" download class="d-block text-decoration-none text-primary mb-2">📂 Tải tệp đính kèm</a>` : ''}
+                        ${data.message ? `<p class="p-2 bg-primary text-white rounded" style="word-wrap: break-word;">${data.message}</p>` : ''}
+                    </div>`
+                    : `<div class="d-flex align-items-start">
+                        <img src="${data.avatar}" alt="Profile Picture" class="img-fluid rounded-circle" style="width: 30px; height: 30px; margin-right: 10px;">
+                        <div>
+                        <p class="mb-1"><strong>${data.sender}:</strong></p>
+                        ${data.image ? `<img src="${data.image}" class="img-fluid rounded mb-2" style="max-width: 400px; max-height:700px;">` : ''}
+                        ${data.file ? `<a href="${data.file}" download class="d-block text-decoration-none text-primary mb-2">📂 Tải tệp đính kèm</a>` : ''}
+                        ${data.message ? `<p class="p-2 bg-light text-dark rounded" style="word-wrap: break-word;">${data.message}</p>` : ''}
+                        </div>
+                    </div>`}
+                </div>
+            `;
+            chatLog.innerHTML += newMessage;
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+    }
+};
+
+// Nút kết thúc cuộc gọi
+endcallButton.onclick = async function (e) {
+    e.preventDefault();
+    const formData = {
+        type: "end_connection",
+        sender: senderUsername,
+        receiver: receiver.username
+    };
+    chatSocket.send(JSON.stringify(formData));
+}
+
+// Gửi tin nhắn chat khi nhấn "Send"
+messageSubmit.onclick = async function (e) {
+    // ngăn sự kiện kích hoạt
+    e.preventDefault();
+    // lấy dữ liệu
+    const message = messageInput.value.trim();
+    const imageFile = imageInput.files[0];
+    const otherFile = fileInput.files[0];
+    // tạo form dữ liệu
+    const formData = {
+        type: "chat_message",
+        sender: senderUsername,
+        message: message,
+        image: null,
+        file: null
+    };
+    // nếu có image thì chuyển đổi để có thể gửi đi
+    if (imageFile) {
+        formData.image = await convertImageToBase64(imageFile);
+    }
+    // nếu có file thì chuyển đổi để có thể gửi đi
+
+    if (otherFile) {
+        formData.file = await convertFileToBase64(otherFile);
+    }
+
+    chatSocket.send(JSON.stringify(formData));
+
+    // tải lại các trường
+    messageInput.value = '';
+    imageInput.value = '';
+    fileInput.value = '';
+};
+// Hàm chuyển đổi ảnh
+async function convertImageToBase64(file) {
+    return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+    });
+}
+// Hàm chuyển đổi file
+async function convertFileToBase64(file) {
+    return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+    });
+}
+
+chatSocket.onclose = function(e) {
+    console.error('Chat socket closed unexpectedly');
+};
+
+chatSocket.onopen = function(e) {
+    console.log('Chat socket opened');
+};
+
+
+{% comment %} video call {% endcomment %}
+// Hàm bắt đầu gọi video 
+async function startCall() {
+    try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localStream = stream;
+    localVideo.srcObject = stream;
+    stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
+    chatSocket.send(JSON.stringify({
+        type: "call_offer",
+        offer: offer,
+        sender: senderUsername
+    }));
+    } catch (error) {
+    console.error("Lỗi trong startCall:", error);
+    }
+}
+
+
+{% comment %} chia sẽ màn hình {% endcomment %}
+// Hàm bắt đầu chia sẽ màn hình 
+
+async function startShareScreen() {
+    try {
+        // Lấy dữ liệu từ màn hình thay vì từ camera
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        localStream = stream;
+        localVideo.srcObject = stream;
+
+        stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+        const offer = await peer.createOffer();
+        await peer.setLocalDescription(offer);
+        chatSocket.send(JSON.stringify({
+            type: "share_offer",
+            offer: offer,
+            sender: senderUsername
+        }));
+    } catch (error) {
+        console.error("Lỗi trong startCall:", error);
+    }
+}
+
+// Hàm két thúc 
+
+function endCall() {
+    if (localStream) {
+    localStream.getTracks().forEach(track => track.stop());
+    }
+    peer.close();
+    localVideo.srcObject = null;
+    remoteVideo.srcObject = null;
+    location.reload();
+}
+
+</script>
+{% endblock %}
